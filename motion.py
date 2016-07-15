@@ -11,7 +11,7 @@ try:
             print "motion detected"
         else:
             print "nothing"
-                time.sleep(0.1)
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
     print " quit"
