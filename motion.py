@@ -9,9 +9,9 @@ try:
     while True:
         if GPIO.input(MOTION_GPIO):
             print "motion detected"
-                else:
-                    print "nothing"
-                        time.sleep(0.1)
+        else:
+            print "nothing"
+                time.sleep(0.1)
 
 except KeyboardInterrupt:
     print " quit"
