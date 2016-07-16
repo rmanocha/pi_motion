@@ -15,4 +15,4 @@ try:
 
 except KeyboardInterrupt:
     print " quit"
-        GPIO.cleanup()
+    GPIO.cleanup()
