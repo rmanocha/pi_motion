@@ -4,11 +4,25 @@ import time
 
 MOTION_TIMEOUT = 5.0
 
-MOTION_GPIO=7
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(MOTION_GPIO, GPIO.IN)
+MOTION_GPIO = 7
+LIGHT_GPIO = 11
+
+GPIO.setmode(GPIO.BCM) # see http://raspberrypi.stackexchange.com/a/12967
+
+GPIO.setup(MOTION_GPIO, GPIO.IN) # this sets up the pin to act as an input
+                                 # this is what we need to read the sensor
+
+GPIO.setup(LIGHT_GPIO, GPIO.OUT) # this sets up the pin to act as an output
 
 last_motion_ts = None
+
+def turn_light_on():
+    if not GPIO.input(LIGHT_GPIO):
+        GPIO.output(LIGHT_GPIO, GPIO.HIGH) # high means turn power on
+
+def turn_light_off():
+    if GPIO.input(LIGHT_GPIO):
+        GPIO.output(LIGHT_GPIO, GPIO.LOW) # low means turn power off
 
 try:
     while True:
@@ -21,9 +35,11 @@ try:
         if last_motion_ts:
             if (datetime.now() - last_motion_ts).total_seconds() <= \
                                                                 MOTION_TIMEOUT:
-                print "It's less than 5 seconds still"
+                #print "It's less than 5 seconds still"
+                turn_light_on()
             else:
-                print "It's been more than 5 seconds now"
+                #print "It's been more than 5 seconds now"
+                turn_light_off()
                 last_motion_ts = None
         else:
             print "last_motion_ts is none"
