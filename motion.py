@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 import RPi.GPIO as GPIO
 import time
 
+GPIO.setwarnings(False)
+
 MOTION_TIMEOUT = 5.0
 
 MOTION_GPIO = 7
@@ -17,12 +19,12 @@ GPIO.setup(LIGHT_GPIO, GPIO.OUT) # this sets up the pin to act as an output
 last_motion_ts = None
 
 def turn_light_on():
-    if not GPIO.input(LIGHT_GPIO):
-        GPIO.output(LIGHT_GPIO, GPIO.HIGH) # high means turn power on
+    if GPIO.input(LIGHT_GPIO):
+        GPIO.output(LIGHT_GPIO, GPIO.LOW) # this is what turns it on
 
 def turn_light_off():
-    if GPIO.input(LIGHT_GPIO):
-        GPIO.output(LIGHT_GPIO, GPIO.LOW) # low means turn power off
+    if not GPIO.input(LIGHT_GPIO):
+        GPIO.output(LIGHT_GPIO, GPIO.HIGH) # this is what turns if off
 
 try:
     while True:
