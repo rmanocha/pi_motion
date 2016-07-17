@@ -30,9 +30,10 @@ try:
     while True:
         if GPIO.input(MOTION_GPIO):
             last_motion_ts = datetime.now()
-            print "motion detected"
+            #print "motion detected"
         else:
-            print "nothing"
+            #print "nothing"
+            pass
 
         if last_motion_ts:
             if (datetime.now() - last_motion_ts).total_seconds() <= \
@@ -43,8 +44,8 @@ try:
                 #print "It's been more than 5 seconds now"
                 turn_light_off()
                 last_motion_ts = None
-        else:
-            print "last_motion_ts is none"
+        #else:
+        #    print "last_motion_ts is none"
 
         time.sleep(0.1)
 
