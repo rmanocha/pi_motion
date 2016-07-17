@@ -1,0 +1,4 @@
+MOTION_TIMEOUT = 5.0 # in seconds
+
+MOTION_GPIO = 7 # BCM mode
+LIGHT_GPIO = 11 # BCM mode

@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta
 import RPi.GPIO as GPIO
+from settings import MOTION_TIMEOUT, MOTION_GPIO, LIGHT_GPIO
 import time
 
 GPIO.setwarnings(False)
 
-MOTION_TIMEOUT = 5.0
-
-MOTION_GPIO = 7
-LIGHT_GPIO = 11
+#MOTION_TIMEOUT = 5.0
+#
+#MOTION_GPIO = 7
+#LIGHT_GPIO = 11
 
 GPIO.setmode(GPIO.BCM) # see http://raspberrypi.stackexchange.com/a/12967
 
