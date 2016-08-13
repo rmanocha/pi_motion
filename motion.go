@@ -108,6 +108,20 @@ func NewMotionTracker(timeout int) *MotionTracker {
     return &MotionTracker{db: db, timeout: timeout}
 }
 
+func TurnLightOn() {
+    if light_pin.Read() != rpio.Low {
+        LogInfo("Turning light on")
+        light_pin.Low()
+    }
+}
+
+func TurhLightOff() {
+    if light_pin.Read() != rpio.High {
+        LogInfo("Turning light off")
+        light_pin.High()
+    }
+}
+
 func main() {
     var mpin, lpin int
     var logfile_location string
@@ -133,7 +147,7 @@ func main() {
     LogInfo("Using logfile: " + logfile_location)
 
     motion_pin = rpio.Pin(mpin)
-    //light_pin = rpio.Pin(lpin)
+    light_pin = rpio.Pin(lpin)
 
     if err := rpio.Open(); err != nil {
         LogFatal(err)
@@ -144,7 +158,7 @@ func main() {
     defer rpio.Close()
 
     motion_pin.Input()
-    //light_pin.Output()
+    light_pin.Output()
 
     for true {
         switch motion_pin.Read() {
@@ -157,8 +171,10 @@ func main() {
 
         if !MoreThanTimeout(last_motion_ts, time.Now().UTC(), light_timeout) {
             //light_pin.Low()
+            TurnLightOn()
         } else {
             //light_pin.High()
+            TurnLightOff()
         }
 
         // sleep for 100 ms
