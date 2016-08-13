@@ -19,9 +19,8 @@ const (
 
 var (
     motion_pin rpio.Pin
-    //light_pin rpio.Pin
+    light_pin rpio.Pin
     light_timeout int // this should be in seconds
-    light_pin = rpio.Pin(11)
 
     // set the default to be something greater than the timeout we have
     //last_motion_ts = time.Now().UTC().Add((light_timeout + -2) * time.Second)
