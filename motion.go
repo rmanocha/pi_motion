@@ -198,6 +198,7 @@ func main() {
     LogInfo("Using timeout: " + strconv.Itoa(light_timeout))
     LogInfo("Using logfile: " + logfile_location)
 
+    // Setup the GPIO stuff
     motion_pin = rpio.Pin(mpin)
     light_pin = rpio.Pin(lpin)
 
@@ -205,18 +206,22 @@ func main() {
         LogFatal(err)
     }
 
-    mt := NewMotionTracker(light_timeout)
-
     defer rpio.Close()
 
     motion_pin.Input()
     light_pin.Output()
 
+    // Setup the DB handler
+    mt := NewMotionTracker(light_timeout)
+
+    // Setup the web handler
     http.HandleFunc("/", HandleDataRequests)
     err = http.ListenAndServe(":9090", nil)
     if err != nil {
         LogRealError(err)
     }
+
+    // all setup done
 
     for true {
         switch motion_pin.Read() {
