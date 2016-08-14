@@ -22,8 +22,6 @@ var (
     light_pin rpio.Pin
     light_timeout int // this should be in seconds
 
-    // set the default to be something greater than the timeout we have
-    //last_motion_ts = time.Now().UTC().Add((light_timeout + -2) * time.Second)
     last_motion_ts time.Time
 )
 
@@ -50,10 +48,12 @@ func LogFatal(err error) {
     log.Fatalln("FATAL:", err)
 }
 
+// Calculate if the 'to' - 'from' is > timeout (in seconds). Returns true of false
 func MoreThanTimeout(from, to time.Time, timeout int) bool {
     return to.Sub(from).Seconds() > float64(timeout)
 }
 
+// get the latest rid in the db. this should be the id when data has just been inserted (i.e. no end_time yet)
 func (mt *MotionTracker) GetSetDBRID() {
     var rid int
     mt.db.QueryRow(SelectLastRidSQL).Scan(&rid)
@@ -61,6 +61,8 @@ func (mt *MotionTracker) GetSetDBRID() {
     mt.rid = rid
 }
 
+// insert a row into the db to start tracking motion. Inserts only the start_time and gets and sets the rid for this instance
+// of MotionTracker
 func (mt *MotionTracker) StartMotionRow() {
     stmt, err := mt.db.Prepare(InsertInitialSQL)
     if err != nil {
@@ -72,6 +74,8 @@ func (mt *MotionTracker) StartMotionRow() {
     }
 }
 
+// Inserts the end_time for the rid of this instance of MotionTracker. Also sets the rid to `0` to signify that new motion
+// can start being tracked
 func (mt *MotionTracker) EndMotionRow() {
     stmt, err := mt.db.Prepare(InsertFinalSQL)
     if err != nil {
@@ -82,6 +86,8 @@ func (mt *MotionTracker) EndMotionRow() {
     }
 }
 
+// This should be called every time new motion is detected. If no current motion is being tracked, then it inserts a new row
+// in the DB
 func (mt *MotionTracker) TrackMotion() {
     mt.last_motion_ts = time.Now().UTC()
     if mt.rid == 0 {
@@ -90,6 +96,8 @@ func (mt *MotionTracker) TrackMotion() {
     }
 }
 
+// This should be called every time no motion is detected. If motion was being tracked recently (i.e. no end_time has been recorded)
+// then it'll record the end_time if the timeout has passed
 func (mt *MotionTracker) TrackNoMotion() {
     mt.last_no_motion_ts = time.Now().UTC()
     if MoreThanTimeout(mt.last_motion_ts, mt.last_no_motion_ts, mt.timeout) && mt.rid != 0 {
@@ -169,10 +177,8 @@ func main() {
         }
 
         if !MoreThanTimeout(last_motion_ts, time.Now().UTC(), light_timeout) {
-            //light_pin.Low()
             TurnLightOn()
         } else {
-            //light_pin.High()
             TurnLightOff()
         }
 
