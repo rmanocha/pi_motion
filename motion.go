@@ -9,12 +9,14 @@ import (
     "log"
     "flag"
     "strconv"
+    "net/http"
 )
 
 const (
     InsertInitialSQL = "insert into last_motion(start_time) values (?)"
     InsertFinalSQL = "update last_motion set end_time=? where rid=?"
     SelectLastRidSQL = "select rid from last_motion order by rid desc limit 1"
+    SelectRecentSQL = "select * from last_motion order by start_time desc limit ?"
 )
 
 var (
@@ -42,6 +44,10 @@ func LogInfo(message string) {
 
 func LogError(message string) {
     log.Println("ERROR:", message)
+}
+
+func LogRealError(err error) {
+    log.Println("ERROR:", err)
 }
 
 func LogFatal(err error) {
@@ -129,6 +135,45 @@ func TurnLightOff() {
     }
 }
 
+type MotionData struct {
+    start_time, end_time time.Time
+    rid int
+}
+
+func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
+    var data []MotionData
+
+    rows, err := db.Query(SelectRecentSQL, limit)
+    if err != nil {
+        LogRealError(err)
+        return &data
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var tmpData MotionData
+        err = rows.Scan(&tmpData.rid, &tmpData.start_time, &tmpData.end_time)
+        if err != nil {
+            LogRealError(err)
+            continue
+        }
+        data = append(data, tmpData)
+    }
+    
+    return &data
+}
+
+func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
+    db, err := sql.Open("sqlite3", "last_motion.db")
+    if err != nil {
+        LogRealError(err)
+        return
+    }
+
+    fmt.Fprintf(w, GetRecentMotionData(100, db))
+}
+
+
 func main() {
     var mpin, lpin int
     var logfile_location string
@@ -166,6 +211,12 @@ func main() {
 
     motion_pin.Input()
     light_pin.Output()
+
+    http.HandleFunc("/", HandleDataRequests)
+    err = http.ListenAndServe(":9090", nil)
+    if err != nil {
+        LogRealError(err)
+    }
 
     for true {
         switch motion_pin.Read() {
