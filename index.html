@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <title>Recent Motion Data</title>
+    </head>
+    <body>
+    <table>
+        <thead>
+            <tr>
+                <td>Start Time</td>
+                <td>End Time</td>
+                <td>RID</td>
+            </tr>
+        </thead>
+        <tbody>
+        {{with .MotionData}}
+        <tr>
+            <td>{{.start_time}}</td>
+            <td>{{.end_time}}</td>
+            <td>{{.rid}}</td>
+        </tr>
+        </tbody>
+    </table>
+</html>

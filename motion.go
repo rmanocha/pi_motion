@@ -10,6 +10,7 @@ import (
     "flag"
     "strconv"
     "net/http"
+    "html/template"
 )
 
 const (
@@ -169,8 +170,12 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
         LogRealError(err)
         return
     }
+    
+    t := template.New("index")
+    t, _ = t.ParseFiles("index.html")
+    t.Execute(w, GetRecentMotionData(100, db))
 
-    fmt.Fprintf(w, GetRecentMotionData(100, db))
+    //fmt.Fprintf(w, GetRecentMotionData(100, db))
 }
 
 
