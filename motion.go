@@ -178,13 +178,14 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-    var mpin, lpin int
+    var mpin, lpin, port int
     var logfile_location string
 
     flag.IntVar(&mpin, "motion_pin", 7, "Pin for the motion detector (BCM mode). Defaults to 7")
     flag.IntVar(&lpin, "light_pin", 11, "Pin for the light (BCM mode). Defaults to 11")
     flag.IntVar(&light_timeout, "timeout", 180, "Timeout before turning off the light. Value should be in seconds. Defaults to 180")
     flag.StringVar(&logfile_location, "logfile", "/var/log/motion.log", "Location for the logfile. Defaults to /var/log/motion.log")
+    flag.IntVar(&port, "port", 9090, "Port on which the web server should listen. Defaults to 9090")
 
     flag.Parse()
 
@@ -219,7 +220,7 @@ func main() {
 
     // Setup the web handler
     http.HandleFunc("/", HandleDataRequests)
-    err = http.ListenAndServe(":9090", nil)
+    err = http.ListenAndServe(":" + strconv.Itoa(port), nil)
     if err != nil {
         LogRealError(err)
     }
