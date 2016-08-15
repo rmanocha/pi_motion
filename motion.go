@@ -137,8 +137,9 @@ func TurnLightOff() {
 }
 
 type MotionData struct {
-    start_time, end_time time.Time
-    rid int
+    StartTime, EndTime time.Time
+    RID int
+    Difference string
 }
 
 func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
@@ -153,11 +154,12 @@ func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
 
     for rows.Next() {
         var tmpData MotionData
-        err = rows.Scan(&tmpData.rid, &tmpData.start_time, &tmpData.end_time)
+        err = rows.Scan(&tmpData.RID, &tmpData.StartTime, &tmpData.EndTime)
         if err != nil {
             LogRealError(err)
             continue
         }
+        tmpData.Difference = tmpData.EndTime.Sub(tmpData.StartTime).String()
         data = append(data, tmpData)
     }
     
@@ -174,7 +176,6 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
     t, _ := template.ParseFiles("index.html")
     t.Execute(w, GetRecentMotionData(100, db))
 }
-
 
 func main() {
     var mpin, lpin int
