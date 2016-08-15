@@ -169,7 +169,7 @@ func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
 }
 
 func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
-    db, err := sql.Open("sqlite3", "last_motion.db")
+    db, err := sql.Open("sqlite3", db_loc)
     if err != nil {
         LogRealError(err)
         return
