@@ -17,7 +17,7 @@ const (
     InsertInitialSQL = "insert into last_motion(start_time) values (?)"
     InsertFinalSQL = "update last_motion set end_time=? where rid=?"
     SelectLastRidSQL = "select rid from last_motion order by rid desc limit 1"
-    SelectRecentSQL = "select * from last_motion order by start_time desc limit ?"
+    SelectRecentSQL = "select rid, start_time, end_time from last_motion order by start_time desc limit ?"
 )
 
 var (
@@ -171,11 +171,8 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
         return
     }
     
-    t := template.New("index")
-    t, _ = t.ParseFiles("index.html")
+    t, _ := template.ParseFiles("index.html")
     t.Execute(w, GetRecentMotionData(100, db))
-
-    //fmt.Fprintf(w, GetRecentMotionData(100, db))
 }
 
 
