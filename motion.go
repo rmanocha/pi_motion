@@ -26,6 +26,8 @@ var (
     light_timeout int // this should be in seconds
 
     last_motion_ts time.Time
+
+    db_loc string
 )
 
 type MotionTracker struct {
@@ -114,7 +116,7 @@ func (mt *MotionTracker) TrackNoMotion() {
 }
 
 func NewMotionTracker(timeout int) *MotionTracker {
-    db, err := sql.Open("sqlite3", "last_motion.db")
+    db, err := sql.Open("sqlite3", db_loc)
     if err != nil {
         LogFatal(err)
     }
@@ -186,6 +188,7 @@ func main() {
     flag.IntVar(&light_timeout, "timeout", 180, "Timeout before turning off the light. Value should be in seconds. Defaults to 180")
     flag.StringVar(&logfile_location, "logfile", "/var/log/motion.log", "Location for the logfile. Defaults to /var/log/motion.log")
     flag.IntVar(&port, "port", 9090, "Port on which the web server should listen. Defaults to 9090")
+    flag.StringVar(&db_loc, "db_loc", "last_motion.db", "Location for the sqlite db file")
 
     flag.Parse()
 
