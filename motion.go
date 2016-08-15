@@ -204,6 +204,8 @@ func main() {
     LogInfo("Using light pin: " + strconv.Itoa(lpin))
     LogInfo("Using timeout: " + strconv.Itoa(light_timeout))
     LogInfo("Using logfile: " + logfile_location)
+    LogInfo("Using port: " + strconv.Itoa(port))
+    LogInfo("Using db location: " + db_loc)
 
     // Setup the GPIO stuff
     motion_pin = rpio.Pin(mpin)
