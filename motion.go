@@ -164,7 +164,7 @@ func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
         tmpData.Difference = tmpData.EndTime.Sub(tmpData.StartTime).String()
         data = append(data, tmpData)
     }
-    
+
     return &data
 }
 
@@ -174,7 +174,7 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
         LogRealError(err)
         return
     }
-    
+
     t, _ := template.ParseFiles("index.html")
     t.Execute(w, GetRecentMotionData(100, db))
 }
@@ -225,9 +225,13 @@ func main() {
 
     // Setup the web handler
     http.HandleFunc("/", HandleDataRequests)
-    err = http.ListenAndServe(":" + strconv.Itoa(port), nil)
-    if err != nil {
-        LogRealError(err)
+
+    // we need this to be in a goroutine so that anything after this can execute. Else the latter doesn't
+    go func() {
+        err = http.ListenAndServe(":" + strconv.Itoa(port), nil)
+        if err != nil {
+            LogRealError(err)
+        }
     }
 
     // all setup done
