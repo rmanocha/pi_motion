@@ -18,6 +18,7 @@ const (
     InsertFinalSQL = "update last_motion set end_time=? where rid=?"
     SelectLastRidSQL = "select rid from last_motion order by rid desc limit 1"
     SelectRecentSQL = "select rid, start_time, end_time from last_motion order by start_time desc limit ?"
+    TimeLayout = "2006-01-02 15:04:05.999999999 -0700 MST"
 )
 
 var (
@@ -156,12 +157,17 @@ func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
 
     for rows.Next() {
         var tmpData MotionData
-        err = rows.Scan(&tmpData.RID, &tmpData.StartTime, &tmpData.EndTime)
+        var end_time sql.NullString // this is the only one that could be null. handle it separately
+        err = rows.Scan(&tmpData.RID, &tmpData.StartTime, &end_time)
         if err != nil {
             LogRealError(err)
             continue
         }
-        tmpData.Difference = tmpData.EndTime.Sub(tmpData.StartTime).String()
+
+        if end_time.Valid {
+            tmpData.EndTime, _ = time.Parse(TimeLayout, end_time.String)
+            tmpData.Difference = tmpData.EndTime.Sub(tmpData.StartTime).String()
+        }
         data = append(data, tmpData)
     }
 
