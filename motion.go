@@ -228,11 +228,11 @@ func main() {
 
     // we need this to be in a goroutine so that anything after this can execute. Else the latter doesn't
     go func() {
-        err = http.ListenAndServe(":" + strconv.Itoa(port), nil)
+        err := http.ListenAndServe(":" + strconv.Itoa(port), nil)
         if err != nil {
             LogRealError(err)
         }
-    }
+    }()
 
     // all setup done
 
