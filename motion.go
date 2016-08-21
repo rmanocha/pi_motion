@@ -28,6 +28,8 @@ var (
     last_motion_ts time.Time
 
     db_loc string
+
+    templates = template.Must(template.ParseGlob("templates/*"))
 )
 
 type MotionTracker struct {
@@ -176,8 +178,8 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    t, _ := template.ParseFiles("index.html")
-    t.Execute(w, GetRecentMotionData(100, db))
+    #t, _ := template.ParseFiles("index.html")
+    templates.Execute(w, "index.html", GetRecentMotionData(100, db))
 }
 
 func main() {
