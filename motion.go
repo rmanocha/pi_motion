@@ -178,8 +178,7 @@ func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    #t, _ := template.ParseFiles("index.html")
-    templates.Execute(w, "index.html", GetRecentMotionData(100, db))
+    templates.ExecuteTemplate(w, "index.html", GetRecentMotionData(100, db))
 }
 
 func main() {
