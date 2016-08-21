@@ -9,12 +9,15 @@ import (
     "log"
     "flag"
     "strconv"
+    "net/http"
+    "html/template"
 )
 
 const (
     InsertInitialSQL = "insert into last_motion(start_time) values (?)"
     InsertFinalSQL = "update last_motion set end_time=? where rid=?"
     SelectLastRidSQL = "select rid from last_motion order by rid desc limit 1"
+    SelectRecentSQL = "select rid, start_time, end_time from last_motion order by start_time desc limit ?"
 )
 
 var (
@@ -44,6 +47,10 @@ func LogInfo(message string) {
 
 func LogError(message string) {
     log.Println("ERROR:", message)
+}
+
+func LogRealError(err error) {
+    log.Println("ERROR:", err)
 }
 
 func LogFatal(err error) {
@@ -131,14 +138,57 @@ func TurnLightOff() {
     }
 }
 
+type MotionData struct {
+    StartTime, EndTime time.Time
+    RID int
+    Difference string
+}
+
+func GetRecentMotionData(limit int, db *sql.DB) *[]MotionData {
+    var data []MotionData
+
+    rows, err := db.Query(SelectRecentSQL, limit)
+    if err != nil {
+        LogRealError(err)
+        return &data
+    }
+    defer rows.Close()
+
+    for rows.Next() {
+        var tmpData MotionData
+        err = rows.Scan(&tmpData.RID, &tmpData.StartTime, &tmpData.EndTime)
+        if err != nil {
+            LogRealError(err)
+            continue
+        }
+
+        tmpData.Difference = tmpData.EndTime.Sub(tmpData.StartTime).String()
+        data = append(data, tmpData)
+    }
+
+    return &data
+}
+
+func HandleDataRequests(w http.ResponseWriter, r *http.Request) {
+    db, err := sql.Open("sqlite3", db_loc)
+    if err != nil {
+        LogRealError(err)
+        return
+    }
+
+    t, _ := template.ParseFiles("index.html")
+    t.Execute(w, GetRecentMotionData(100, db))
+}
+
 func main() {
-    var mpin, lpin int
+    var mpin, lpin, port int
     var logfile_location string
 
     flag.IntVar(&mpin, "motion_pin", 7, "Pin for the motion detector (BCM mode). Defaults to 7")
     flag.IntVar(&lpin, "light_pin", 11, "Pin for the light (BCM mode). Defaults to 11")
     flag.IntVar(&light_timeout, "timeout", 180, "Timeout before turning off the light. Value should be in seconds. Defaults to 180")
     flag.StringVar(&logfile_location, "logfile", "/var/log/motion.log", "Location for the logfile. Defaults to /var/log/motion.log")
+    flag.IntVar(&port, "port", 9090, "Port on which the web server should listen. Defaults to 9090")
     flag.StringVar(&db_loc, "db_loc", "last_motion.db", "Location for the sqlite db file")
 
     flag.Parse()
@@ -155,7 +205,10 @@ func main() {
     LogInfo("Using light pin: " + strconv.Itoa(lpin))
     LogInfo("Using timeout: " + strconv.Itoa(light_timeout))
     LogInfo("Using logfile: " + logfile_location)
+    LogInfo("Using port: " + strconv.Itoa(port))
+    LogInfo("Using db location: " + db_loc)
 
+    // Setup the GPIO stuff
     motion_pin = rpio.Pin(mpin)
     light_pin = rpio.Pin(lpin)
 
@@ -163,12 +216,26 @@ func main() {
         LogFatal(err)
     }
 
-    mt := NewMotionTracker(light_timeout)
-
     defer rpio.Close()
 
     motion_pin.Input()
     light_pin.Output()
+
+    // Setup the DB handler
+    mt := NewMotionTracker(light_timeout)
+
+    // Setup the web handler
+    http.HandleFunc("/", HandleDataRequests)
+
+    // we need this to be in a goroutine so that anything after this can execute. Else the latter doesn't
+    go func() {
+        err := http.ListenAndServe(":" + strconv.Itoa(port), nil)
+        if err != nil {
+            LogRealError(err)
+        }
+    }()
+
+    // all setup done
 
     for true {
         switch motion_pin.Read() {
